@@ -1,34 +1,40 @@
 import { Router } from 'express';
-import { db } from '../config/firebase.js';
-// import { authenticateUser } from '../auth/auth.js';
+import { addUser, deleteUser, getAllUsers, getUserByEmail, getUserById, updateEntireUser, updateUserFields } from './service.js';
 
 export const router = Router();
 
-const usersCollection = db.collection('users');
-
 // Get all users
 router.get('/', async (req, res) => {
-    let users = [];
-    const usersData = await usersCollection.get();
-    usersData.forEach(u => {users.push({id: u.id, ...u.data()});});
-    res.status(200).json(users);
-    
-    // res.send(users);
+    try {
+        const users = await getAllUsers();
+        res.status(200).json(users);
+    } catch(e) {
+        console.log(e);
+        res.status(500).json({message: 'server error'});
+    }
 });
 
 // Get user by email
 router.get('/:id', async (req, res) => {
-    const id = req.params.id;
     try {
-        const userData = await usersCollection.doc(id).get();
-        const user = { id: userData.id, ...userData.data() };
-        if (!user.hasOwnProperty('email')) {
-            throw new Error(`User with email ${id} does not exist.`)
-        }
+        const id = req.params.id;
+        const user = await getUserById(id);
         res.status(200).json(user);
-    } catch (e) {
-        console.log(e.message);
-        res.status(404).json({message: e.message});
+    } catch(e) {
+        console.log(e);
+        res.status(404).json({message: 'not found'});
+    }
+});
+
+// Get user by email
+router.get('/email/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        const user = await getUserByEmail(email);
+        res.status(200).json(user);
+    } catch(e) {
+        console.log(e);
+        res.status(500).json(e);
     }
 });
 
@@ -36,15 +42,11 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const user = req.body;
-        const email = user && user.hasOwnProperty('email') && user.email ? user.email : '';
-        if (!email) {
-            throw new Error('Request body does not contain required field: email');
-        }
-        const result = await usersCollection.doc(email).set(user);
-        res.send(result);
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+        const result = await addUser(user);
+        res.status(201).json(result);
+    } catch (e) {
+        console.log(e);
+        res.status(500).json(e);
     }
 });
 
@@ -53,18 +55,11 @@ router.put('/:id', async (req, res) => {
     try {
         const user = req.body;
         const id = req.params.id;
-        const email = user && user.hasOwnProperty('email') && user.email ? user.email : '';
-        if (!email) {
-            throw new Error('Request body does not contain required field: email');
-        }
-        if (id !== email) {
-            throw new Error(`Payload and params emails must match, ${email} and ${id}`);
-        }
-        const result = await usersCollection.doc(id).set(user);
-        res.send(result);
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+        const result = await updateEntireUser(id, user);
+        res.status(200).json(result);
+    } catch (e) {
+        console.log(e);
+        res.status(500).json(e);
     }
 });
 
@@ -73,18 +68,11 @@ router.patch('/:id', async (req, res) => {
     try {
         const user = req.body;
         const id = req.params.id;
-        const email = user && user.hasOwnProperty('email') && user.email ? user.email : '';
-        if (!email) {
-            throw new Error('Request body does not contain required field: email');
-        }
-        if (id !== email) {
-            throw new Error(`Payload and params emails must match, ${email} and ${id}`);
-        }
-        const result = await usersCollection.doc(id).update(user);
-        res.send(result);
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+        const result = await updateUserFields(id, user);
+        res.status(200).json(result);
+    } catch (e) {
+        console.log(e);
+        res.status(500).json(e);
     }
 });
 
@@ -92,11 +80,10 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const result = await usersCollection.doc(id).delete();
-        console.log(result);
-        res.send('successfully deleted');
-    } catch (err) {
-        console.log(err.response);
-        res.send(err);
+        const result = await deleteUser(id);
+        res.status(200).json(result);
+    } catch(e) {
+        console.log(e);
+        res.status(500).json(e);
     }
 });
