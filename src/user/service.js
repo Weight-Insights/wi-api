@@ -9,7 +9,7 @@ async function getAllUsers() {
 async function getUserById(id) {
     const user = await findUserById(id);
     if (!user.hasOwnProperty('email')) {
-        throw new Error(`User with email ${id} does not exist.`)
+        throw new Error(`User with id ${id} does not exist.`)
     }
     return user;
 }
@@ -35,9 +35,9 @@ async function updateEntireUser(id, user) {
         throw new Error('Request body does not contain required field: email');
     }
     if (id !== user.id) {
-        throw new Error(`Payload and params emails must match, ${email} and ${id}`);
+        throw new Error(`Payload and params ids must match, ${user.id} and ${id}`);
     }
-    const result = await saveUser(email);
+    const result = await saveUser(user);
     return result;
 }
 
@@ -47,9 +47,9 @@ async function updateUserFields(id, user) {
         throw new Error('Request body does not contain required field: email');
     }
     if (id !== user.id) {
-        throw new Error(`Payload and params emails must match, ${email} and ${id}`);
+        throw new Error(`Payload and params ids must match, ${useer.id} and ${id}`);
     }
-    const result = await updateUser(email);
+    const result = await updateUser(user);
     return result;
 }
 
