@@ -18,8 +18,12 @@ async function findFirstUserByEmail(email) {
     const snapshot = await usersCollection.where('email', '==', email).get();
     if (snapshot.empty) {
         throw new Error(`User with email ${email} does not exist.`);
-    }  
-    return snapshot[0].data();
+    }
+    const users = [];
+    snapshot.forEach(doc => {
+        users.push(doc.data());
+    });
+    return users[0];
 }
 
 /**
